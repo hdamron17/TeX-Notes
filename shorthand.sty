@@ -1,0 +1,367 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{shorthand}[2019/02/07 My personal shorthands]
+
+\RequirePackage{amsmath}
+\RequirePackage{float}
+\RequirePackage{xspace}
+\RequirePackage{kvoptions}
+
+\RequirePackage{geometry}
+
+% For tikz option
+\RequirePackage{environ}
+\RequirePackage{iftex}
+
+\DeclareStringOption[]{numbering}
+
+\DeclareStringOption[1in]{margin}
+\DeclareBoolOption{keepmargin}
+
+\DeclareBoolOption[true]{imports}
+\DeclareComplementaryOption{noimports}{imports}
+\DeclareBoolOption[true]{base}
+\DeclareBoolOption[true]{math}
+\DeclareBoolOption[true]{table}
+\DeclareBoolOption[true]{list}
+\DeclareBoolOption{tikz}
+\DeclareBoolOption{code}
+\DeclareBoolOption{physics}
+\DeclareBoolOption{physlab}
+\DeclareBoolOption{algorithm}
+\DeclareBoolOption{algebra}  % Specifically for MATH 546 -- Algebraic Structures
+\DeclareBoolOption{ml}  % Specifically for MATH 599 -- Machine Learning
+\DeclareBoolOption{ling}  % Specifically for LING 505 -- Mathematical Linguistics
+\DeclareVoidOption{isodate}{\AtEndOfPackage{\RequirePackage[american,orig]{isodate}}}
+
+\DeclareBoolOption{mnotes}
+\DeclareStringOption[1in]{rmargin}
+
+\DeclareBoolOption{bib}
+\DeclareStringOption[ieee]{bibstyle}
+\DeclareStringOption[bibtex]{bibbackend}
+\DeclareStringOption[]{bibargs}
+
+\DeclareStringOption[]{shifttitle}
+\DeclareBoolOption{smalltitle}
+
+\ProcessLocalKeyvalOptions*\relax
+
+\newif\if@numbering
+\@numberingtrue
+\ifx\shorthand@numbering\empty\@numberingfalse\else\@numberingtrue\fi
+
+\ifshorthand@physlab
+	\shorthand@physicstrue
+
+	\shorthand@bibtrue
+	\def\shorthand@bibbackend{biber}
+	\def\shorthand@bibstyle{numeric}
+	\g@addto@macro\shorthand@bibargs{,natbib=true,sorting=none}
+\fi
+
+\ifshorthand@physics\shorthand@mathtrue\fi
+
+\ifshorthand@smalltitle\ifx\shorthand@shifttitle\empty
+	\def\shorthand@shifttitle{5ex} % Smalltitle is default 5ex for article but does not override shifttitle if specified
+\fi\fi
+
+\ifshorthand@base
+	\providecommand{\uline}[1]{\underline{\smash{#1}}}
+	\providecommand{\TODO}{\text{\textcolor{red}{TODO}}\xspace}
+	\ifshorthand@keepmargin\else
+		\geometry{margin=\shorthand@margin}
+	\fi
+\fi
+\ifshorthand@mnotes
+	\RequirePackage{marginnote}
+	\newcommand{\mlabel}[1]{\phantomsection\marginnote{\textnormal{#1}} \addcontentsline{toc}{subsubsection}{\textbullet~#1}}
+
+	\ifdim \shorthand@rmargin > \Gm@rmargin \geometry{rmargin=\shorthand@rmargin} \fi
+\fi
+\ifshorthand@math
+	\RequirePackage{amsthm,amssymb,mathtools}
+	\newcommand{\vardef}[3][]{\def\varname{#2}\expandafter\edef\csname#1\varname\endcsname{#3\noexpand\xspace}}
+	\newcommand{\vdef}[1]{\vardef[v]{#1}{\noexpand\ensuremath{\noexpand\vec{\varname}}}}
+	\newcommand{\bdef}[1]{\vardef[b]{#1}{\noexpand\ensuremath{\noexpand\mathbf{\varname}}}}
+	\newcommand{\hdef}[1]{\vardef[h]{#1}{\noexpand\ensuremath{\noexpand\hat{\varname}}}}
+	\newcommand{\setdef}[1]{\vardef{#1}{\noexpand\ensuremath{\noexpand\mathbb{\varname}}}}
+
+	\setdef{N} \setdef{Z} \setdef{R} \setdef{Q}
+
+	\newtheorem{theorem}{Theorem}
+	\newtheorem*{theorem*}{Theorem}
+	\newtheorem{lemma}{Lemma}
+	\newtheorem*{lemma*}{Lemma}
+	\if@numbering
+		\numberwithin{theorem}{\shorthand@numbering}
+		\numberwithin{lemma}{\shorthand@numbering}
+	\fi
+
+	\newcommand{\tand}{\textrm{ and }}
+	\newcommand{\tor}{\textrm{ or }}
+
+	\renewcommand{\triangle}{\vartriangle}
+	\newcommand{\contradict}{\ensuremath{\Rightarrow\!\Leftarrow}}
+
+	\newcommand{\True}{\textsc{True}}
+	\newcommand{\False}{\textsc{False}}
+	\newcommand{\len}{\mathrm{len}}
+
+	\newcommand{\pmat}[1]{\ensuremath{\begin{pmatrix}#1\end{pmatrix}}}
+	\newcommand{\inv}{\ensuremath{^{-1}}}
+	\newcommand{\Pset}{\mathcal{P}}
+	\newcommand{\T}{^{\,\mathrm{T}}}  % Transpose
+
+	\newcommand{\intdiv}[2]{\left\lfloor \frac{#1}{#2} \right\rfloor}
+	\newcommand{\abs}[1]{{\left|#1\right|}}
+	\newcommand{\lcm}[1]{{\mathrm{lcm}\left(#1\right)}}
+	\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+
+	\newcommand{\dd}[3][]{\frac{\mathrm{d}^{#1}#2}{\mathrm{d}#3^{#1}}}
+	\newcommand{\dbd}[2][]{\dd[#1]{}{#2}}
+
+	\newcommand{\ddef}[1]{
+		\expandafter\providecommand\csname d#1\endcsname[1][]{\ensuremath{\mathrm{d}^{##1}#1}}
+		\expandafter\providecommand\csname dd#1\endcsname[1][]{\dbd[##1]{#1}\xspace}
+		\expandafter\providecommand\csname dbd#1\endcsname[2][]{\dd[##1]{##2}{#1}}
+	}
+	\ddef{x} \ddef{y} \ddef{t} \ddef{n}
+
+	\newcommand{\limdef}[1]{
+		\expandafter\providecommand\csname lim#1inf\endcsname{\ensuremath{\lim_{#1\to\infty}}}
+		\expandafter\providecommand\csname lim#1zero\endcsname{\ensuremath{\lim_{#1\to0}}}
+	}
+	\limdef{n}
+\fi
+\ifshorthand@algebra
+	\newcommand{\subgroup}{\leqslant}
+	\newcommand{\nsubgroup}{\nleqslant}
+	\newcommand{\supgroup}{\geqslant}
+	\newcommand{\nsupgroup}{\ngeqslant}
+
+	\newcommand{\generator}[1]{{\left\langle #1 \right\rangle}}
+	\newcommand{\Ord}[1]{{\left|#1\right|}}
+	\newcommand{\ord}[1]{{\mathrm{o}\!\left(#1\right)}}
+
+	\newcommand{\normsubgroup}{\vartriangleleft}%{\trianglelefteq}
+	\newcommand{\quot}[2]{\text{\raise2pt\hbox{$#1$}\big/\lower2pt\hbox{$#2$}}}
+\fi
+\ifshorthand@table
+	\RequirePackage{array,multirow,enumitem,tabularx}
+	\newcolumntype{C}{>{$}c<{$}}
+	
+	\newenvironment{ctab}{
+		\begin{center}
+		\begin{tabular}
+	}{
+		\end{tabular}
+		\end{center}
+	}
+	
+	\newenvironment{tab}[2]{
+		\begin{minipage}{\linewidth}
+		\begin{table}[H]
+		\caption{#2}
+		\begin{ctab}{#1}
+	}{
+		\end{ctab}
+		\end{table}
+		\end{minipage}
+	}
+\fi
+\ifshorthand@list
+	\newenvironment{ul}{\begin{itemize}}{\end{itemize}}
+	\newenvironment{ol}{\begin{enumerate}}{\end{enumerate}}
+	\newcommand{\li}{\item}
+
+	\newcommand{\setnext}[2]{\setcounter{#1}{\numexpr#2-1\relax}}
+	\newcommand{\stepsec}{\stepcounter{section}}
+	\newcommand{\setsec}{\setcounter{section}}
+	\newcommand{\setsubsec}{\setcounter{subsection}}
+	\newcommand{\seti}{\setcounter{enumi}}
+	\newcommand{\setii}{\setcounter{enumii}}
+\fi
+\ifshorthand@physics
+	\RequirePackage{siunitx}
+
+	\def\hi{\ensuremath{\hat{\i}}}
+	\def\hj{\ensuremath{\hat{\j}}}
+	\def\hk{\ensuremath{\hat{k}}}
+
+	\vdef{a} \vdef{v} \vdef{r} \vdef{F} \vdef{g}
+
+	\newcommand{\mpss}{\si{\m/\s^2}\xspace}
+\fi
+\ifshorthand@tikz
+	\RequirePackage{tikz}
+	\usetikzlibrary{patterns,calc,cd,graphs,matrix,arrows.meta,positioning}
+
+	\ifLuaTeX
+		\usetikzlibrary{graphdrawing}
+		\usegdlibrary{trees,layered}
+	\fi
+
+	\NewEnviron{tikzpic}[1][]{%
+		\ifLuaTeX
+		\begin{tikzpicture}[>=Stealth,#1]
+		\expandafter\BODY
+		\end{tikzpicture}
+		\else
+		{\color{red}\framebox[4.2cm]{\parbox{4.1cm}{\centering Unable to produce graphics without Lua\TeX}}}
+		\fi
+	}
+
+	\floatstyle{ruled}
+	\newfloat{innerdiagram}{H}{diag}
+	\floatname{innerdiagram}{Diagram}
+	\if@numbering
+	\numberwithin{innerdiagram}{\shorthand@numbering}
+	\fi
+	\newenvironment{diagram}[2][]{
+		\hfill\allowbreak
+		\par\noindent\begin{minipage}{\linewidth}
+			\begin{innerdiagram}[H]
+				\caption{#2 \ifx#1\empty\else\label{#1}\fi}
+				\begin{center}
+					\begin{tikzpicture}
+				}{
+					\end{tikzpicture}
+				\end{center}
+			\end{innerdiagram}
+		\end{minipage}
+	}
+\fi
+\ifshorthand@code
+	\RequirePackage{listings}
+	\RequirePackage{lstautogobble}
+	\RequirePackage[lighttt]{lmodern}
+	\def\defaultlang{}
+	\newcommand{\setlang}[1]{\def\defaultlang{#1}}
+
+	\newcommand{\codeblockname}{Code Block}
+	\newcommand{\lstnumbername}{\@gobble}
+	
+	\newcommand{\code}{\lstinline}
+
+	\newcounter{codeblock}
+	\if@numbering
+		\numberwithin{codeblock}{\shorthand@numbering}
+	\fi
+
+	\renewcommand{\itshape}{\slshape}
+	\lstset{
+		basicstyle=\ttfamily,
+		keywordstyle=\bfseries,
+		commentstyle=\slshape,
+		breaklines=true,
+		showstringspaces=false,
+		tabsize=4,
+		autogobble=true
+	}
+
+	\lstnewenvironment{codeblock}[3][]{
+		\hfill\allowbreak
+		\minipage{\linewidth}
+		\rule{\textwidth}{1.2pt}
+		\refstepcounter{codeblock}
+		\textbf{Code Block \thecodeblock}: #2 \ifx#1\empty\else\label{#1}\fi
+		\vspace{3pt}\hrule
+		\makeatletter
+		\lstset{language={\ifx#3\empty\defaultlang\else#3\fi}, escapeinside={{@<}{>@}}}
+	}{
+		\makeatother
+		\hrule
+		\endminipage
+		\hfill\allowbreak
+	}
+\fi
+\ifshorthand@algorithm
+	\if@numbering
+		\PassOptionsToPackage{\shorthand@numbering}{algorithm}
+	\fi
+	\RequirePackage{algorithm}
+	\RequirePackage{algpseudocode}
+	\newenvironment{alg}[1]{
+		\noindent
+		\begin{minipage}{\linewidth}
+		\begin{algorithm}[H]
+		\caption{#1}
+		\begin{algorithmic}[1]
+	}{
+		\end{algorithmic}
+		\end{algorithm}
+		\end{minipage}
+	}
+\fi
+\ifshorthand@ml
+	\newcommand{\Tr}[1]{\text{Tr}\left(#1\right)}
+	\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+	\AtEndOfPackage{\renewcommand{\.}{\boldsymbol{\cdot}}}
+\fi
+\ifshorthand@ling
+	\renewcommand{\iff}{\leftrightarrow}
+	\renewcommand{\implies}{\rightarrow}
+
+	\renewcommand{\land}{\mathbin\&}
+	\renewcommand{\lnot}{{\sim}}
+\fi
+\ifshorthand@physlab
+	\RequirePackage[section]{placeins}
+	\RequirePackage{csvsimple}
+	\RequirePackage{titling}
+	\RequirePackage[margin=1cm]{caption}
+
+	\edef\datapath{\jobname}
+	\graphicspath{{\datapath/}}
+
+	\setlength{\droptitle}{0.2\textheight}
+
+	\def\thelabtitle{}
+	\newcommand{\labtitle}[1]{\def\thelabtitle{#1}}
+
+	\def\thelabcycle{}
+	\newcommand{\labcycle}[1]{\def\thelabcycle{#1}}
+
+	\def\thelabmeeting{}
+	\newcommand{\labmeeting}[1]{\def\thelabmeeting{#1}}
+
+	\def\thetextbookpages{}
+	\newcommand{\textbookpages}[1]{\def\thetextbookpages{\ppno~#1}}
+
+	\def\theauthors{}
+	\newcommand{\addauthor}[2][]{\g@addto@macro\theauthors{\uline{#2} \ifx#1\empty\else[#1]\fi \\[4pt]}}
+
+	\title{\thelabtitle \\ \large \thelabcycle \\ \thelabmeeting}
+	\author{\theauthors}
+	\let\olddate\date
+	\renewcommand\date[1]{\olddate{#1\vfill}}
+
+	% Default values
+	\labmeeting{PHYS 211L-H01 Tuesday 6:45 p.m.}
+	\addauthor[00422071]{Hunter Damron}
+	\addauthor[00487467]{Abby Davies}
+\fi
+\ifx\shorthand@shifttitle\empty\else
+	\let\oldtitle\title
+	\renewcommand{\title}[1]{\oldtitle{\vspace*{-\shorthand@shifttitle}#1}}
+\fi
+\ifshorthand@bib
+	\RequirePackage[backend=\shorthand@bibbackend,style=\shorthand@bibstyle,\shorthand@bibargs]{biblatex}
+\fi
+\ifshorthand@imports
+	\RequirePackage[hidelinks]{hyperref}
+	\RequirePackage{xcolor}
+	\RequirePackage{graphicx}
+	\RequirePackage[utf8]{inputenc}
+	\RequirePackage[T1]{fontenc}
+
+	%% Additional imports from notes class but not generally needed
+	%\RequirePackage{CJK}
+	%\RequirePackage[toc,page]{appendix}
+	%\RequirePackage[american]{babel}
+	%\RequirePackage{ifthen}
+	%\RequirePackage{multicol}
+\fi
+
+\endinput
