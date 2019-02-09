@@ -25,13 +25,14 @@
 \DeclareBoolOption[true]{list}
 \DeclareBoolOption{tikz}
 \DeclareBoolOption{code}
-\DeclareBoolOption{physics}
-\DeclareBoolOption{physlab}
-\DeclareBoolOption{algorithm}
-\DeclareBoolOption{algebra}  % Specifically for MATH 546 -- Algebraic Structures
-\DeclareBoolOption{ml}  % Specifically for MATH 599 -- Machine Learning
-\DeclareBoolOption{ling}  % Specifically for LING 505 -- Mathematical Linguistics
+\DeclareBoolOption{physics}  % PHYS 211 -- Intro Physics
+\DeclareBoolOption{physlab}  % PHYS 211L -- Intro Physics Lab
+\DeclareBoolOption{algorithm}  % CSCE 350 -- Data Structures and Algorithms
+\DeclareBoolOption{algebra}  % MATH 546 -- Algebraic Structures
+\DeclareBoolOption{ml}  % MATH 599 -- Machine Learning
+\DeclareBoolOption{ling}  % LING 505 -- Mathematical Linguistics
 \DeclareVoidOption{isodate}{\AtEndOfPackage{\RequirePackage[american,orig]{isodate}}}
+\DeclareVoidOption{multicol}{\AtEndOfPackage{\RequirePackage{multicol}}}
 
 \DeclareBoolOption{mnotes}
 \DeclareStringOption[1in]{rmargin}
@@ -88,6 +89,7 @@
 
 	\setdef{N} \setdef{Z} \setdef{R} \setdef{Q}
 
+	\theoremstyle{plain}
 	\newtheorem{theorem}{Theorem}
 	\newtheorem*{theorem*}{Theorem}
 	\newtheorem{lemma}{Lemma}
@@ -96,6 +98,13 @@
 		\numberwithin{theorem}{\shorthand@numbering}
 		\numberwithin{lemma}{\shorthand@numbering}
 	\fi
+
+	\newcommand{\newremark}[2]{\expandafter\newcommand\noexpand#1{\textbf{#2:}\xspace}}
+	\newremark{\note}{Note}
+	\newremark{\defn}{Definition}
+	\newremark{\remark}{Remark}
+	\newremark{\propose}{Proposition}
+	\newremark{\claim}{Claim}
 
 	\newcommand{\tand}{\textrm{ and }}
 	\newcommand{\tor}{\textrm{ or }}
@@ -296,6 +305,7 @@
 \ifshorthand@ml
 	\newcommand{\Tr}[1]{\text{Tr}\left(#1\right)}
 	\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+	\newcommand{\grad}{\nabla}
 
 	\AtEndOfPackage{\renewcommand{\.}{\boldsymbol{\cdot}}}
 \fi
