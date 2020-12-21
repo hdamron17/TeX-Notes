@@ -5,7 +5,7 @@
 \RequirePackage{float}
 \RequirePackage{xspace}
 \RequirePackage{kvoptions}
-
+\RequirePackage{etoolbox}
 \RequirePackage{geometry}
 
 % For tikz option
@@ -13,7 +13,6 @@
 \RequirePackage{iftex}
 
 \DeclareStringOption[]{numbering}
-
 \DeclareStringOption[1in]{margin}
 \DeclareBoolOption{keepmargin}
 
@@ -28,7 +27,8 @@
 \DeclareBoolOption{physics}  % PHYS 211 -- Intro Physics
 \DeclareBoolOption{physlab}  % PHYS 211L -- Intro Physics Lab
 \DeclareBoolOption{algorithm}  % CSCE 350 -- Data Structures and Algorithms
-\DeclareBoolOption{algebra}  % MATH 546 -- Algebraic Structures
+\DeclareBoolOption{algebra}  % MATH 546 -- Algebraic Structures 1
+\DeclareBoolOption{analysis}  % MATH 554 -- Analysis 1
 \DeclareBoolOption{ml}  % MATH 599 -- Machine Learning
 \DeclareBoolOption{ling}  % LING 505 -- Mathematical Linguistics
 \DeclareVoidOption{isodate}{\AtEndOfPackage{\RequirePackage[american,orig]{isodate}}}
@@ -38,7 +38,7 @@
 \DeclareStringOption[1in]{rmargin}
 
 \DeclareBoolOption{bib}
-\DeclareStringOption[ieee]{bibstyle}
+\DeclareStringOption[numeric]{bibstyle}
 \DeclareStringOption[bibtex]{bibbackend}
 \DeclareStringOption[]{bibargs}
 
@@ -85,7 +85,9 @@
 	\newcommand{\vdef}[1]{\vardef[v]{#1}{\noexpand\ensuremath{\noexpand\vec{\varname}}}}
 	\newcommand{\bdef}[1]{\vardef[b]{#1}{\noexpand\ensuremath{\noexpand\mathbf{\varname}}}}
 	\newcommand{\hdef}[1]{\vardef[h]{#1}{\noexpand\ensuremath{\noexpand\hat{\varname}}}}
-	\newcommand{\setdef}[1]{\vardef{#1}{\noexpand\ensuremath{\noexpand\mathbb{\varname}}}}
+	\newcommand{\setdef}[2][]{\vardef[#1]{#2}{\noexpand\ensuremath{\noexpand\mathbb{\varname}}}}
+	\newcommand{\caldef}[2][cal]{\vardef[#1]{#2}{\noexpand\ensuremath{\noexpand\mathcal{\varname}}}}
+	\newcommand{\frakdef}[2][frak]{\vardef[#1]{#2}{\noexpand\ensuremath{\noexpand\mathfrak{\varname}}}}
 
 	\setdef{N} \setdef{Z} \setdef{R} \setdef{Q}
 
@@ -125,22 +127,39 @@
 	\newcommand{\abs}[1]{{\left|#1\right|}}
 	\newcommand{\lcm}[1]{{\mathrm{lcm}\left(#1\right)}}
 	\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+	\newcommand{\Mid}{\mathbin\Vert}
+
+	\newcommand{\grad}{\nabla}
+	\newcommand{\del}{\partial}
 
 	\newcommand{\dd}[3][]{\frac{\mathrm{d}^{#1}#2}{\mathrm{d}#3^{#1}}}
 	\newcommand{\dbd}[2][]{\dd[#1]{}{#2}}
+
+	\newcommand{\deld}[3][]{\frac{\del^{#1}#2}{\del#3^{#1}}}
+	\newcommand{\delbd}[2][]{\deld[#1]{}{#2}}
 
 	\newcommand{\ddef}[1]{
 		\expandafter\providecommand\csname d#1\endcsname[1][]{\ensuremath{\mathrm{d}^{##1}#1}}
 		\expandafter\providecommand\csname dd#1\endcsname[1][]{\dbd[##1]{#1}\xspace}
 		\expandafter\providecommand\csname dbd#1\endcsname[2][]{\dd[##1]{##2}{#1}}
+
+		\expandafter\providecommand\csname del#1\endcsname[1][]{\ensuremath{\del^{##1}#1}}
+		\expandafter\providecommand\csname deld#1\endcsname[1][]{\delbd[##1]{#1}\xspace}
+		\expandafter\providecommand\csname delbd#1\endcsname[2][]{\deld[##1]{##2}{#1}}
 	}
+	\newcommand{\byd}{\mathrm{d}}
 	\ddef{x} \ddef{y} \ddef{t} \ddef{n}
 
 	\newcommand{\limdef}[1]{
 		\expandafter\providecommand\csname lim#1inf\endcsname{\ensuremath{\lim_{#1\to\infty}}}
-		\expandafter\providecommand\csname lim#1zero\endcsname{\ensuremath{\lim_{#1\to0}}}
+		\expandafter\providecommand\csname lim#1z\endcsname{\ensuremath{\lim_{#1\to0}}}
+		\expandafter\providecommand\csname lim#1\endcsname[1]{\ensuremath{\lim_{#1\to##1}}}
+		\expandafter\providecommand\csname Lim#1inf\endcsname{{\displaystyle\csname lim#1inf\endcsname}}
+		\expandafter\providecommand\csname Lim#1z\endcsname{{\displaystyle\csname lim#1z\endcsname}}
+		\expandafter\providecommand\csname Lim#1\endcsname[1]{{\displaystyle\csname lim#1\endcsname{##1}}}
 	}
 	\limdef{n}
+	\limdef{x}
 \fi
 \ifshorthand@algebra
 	\newcommand{\subgroup}{\leqslant}
@@ -155,9 +174,43 @@
 	\newcommand{\normsubgroup}{\vartriangleleft}%{\trianglelefteq}
 	\newcommand{\quot}[2]{\text{\raise2pt\hbox{$#1$}\big/\lower2pt\hbox{$#2$}}}
 \fi
+\ifshorthand@analysis
+	\RequirePackage{setspace,fancyhdr,titling,lastpage,ifthen,enumitem}
+	\AtBeginEnvironment{proof}{%
+		\doublespacing\vspace{-\topsep}
+		\setlength{\abovedisplayskip}{0pt}
+		\setlength{\belowdisplayskip}{0pt}}
+	\newcommand\courseid[1]{\def\thecourseid{#1}}
+	\fancypagestyle{plain}{
+		\fancyhf{}
+		\rhead{{\theauthor} \\ {\thecourseid} \\ {\thedate}}
+		\rfoot{\ifthenelse{\pageref{LastPage}>1}{\thepage}{}}
+	}
+	\pagestyle{plain}
+	\renewcommand{\headrulewidth}{0pt}
+	\renewcommand{\maketitle}{\begin{center}\LARGE \thetitle\end{center}}
+	\setlength\headheight{3\baselineskip}
+
+	\let\subseteq\subset
+	\let\supseteq\supset
+	\let\subset\subsetneq
+	\let\supset\supsetneq
+	\newcounter{proposition}
+	\newcommand{\prop}{\refstepcounter{proposition}\textbf{Proposition \arabic{proposition}:}\xspace}
+	\newcommand{\Lemma}{\refstepcounter{lemma}\textbf{Lemma~\thelemma:}\xspace}
+	\setlist{itemsep=\baselineskip}
+	\newcommand{\directive}[1]{\relax[\,#1\,]}
+	\newcommand{\thinkingland}[1]{\ensuremath{\left\langle\text{#1}\right\rangle}}
+
+	\setcounter{lemma}{-1}
+	\setcounter{theorem}{-1}
+	\setcounter{equation}{-1}
+	\setcounter{proposition}{-1}
+\fi
 \ifshorthand@table
 	\RequirePackage{array,multirow,enumitem,tabularx}
 	\newcolumntype{C}{>{$}c<{$}}
+	\newcolumntype{Y}{>{\centering\arraybackslash}X}
 	
 	\newenvironment{ctab}{
 		\begin{center}
@@ -193,13 +246,18 @@
 \ifshorthand@physics
 	\RequirePackage{siunitx}
 
-	\def\hi{\ensuremath{\hat{\i}}}
-	\def\hj{\ensuremath{\hat{\j}}}
+	\def\hi{\ensuremath{\hat{\imath}}}
+	\def\hj{\ensuremath{\hat{\jmath}}}
 	\def\hk{\ensuremath{\hat{k}}}
 
-	\vdef{a} \vdef{v} \vdef{r} \vdef{F} \vdef{g}
+	\vdef{a} \vdef{v} \vdef{r} \vdef{F} \vdef{g} \vdef{f} \vdef{T} \vdef{p}
 
 	\newcommand{\mpss}{\si{\m/\s^2}\xspace}
+	
+	\newcommand{\proj}{\mathrm{proj}}
+
+	\newcommand{\cross}{\times}
+	\newcommand{\x}{\cross}
 \fi
 \ifshorthand@tikz
 	\RequirePackage{tikz}
@@ -305,9 +363,10 @@
 \ifshorthand@ml
 	\newcommand{\Tr}[1]{\text{Tr}\left(#1\right)}
 	\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
-	\newcommand{\grad}{\nabla}
 
 	\AtEndOfPackage{\renewcommand{\.}{\boldsymbol{\cdot}}}
+
+	\vdef{x} \vdef{y} \vdef{f} \vdef{v} \bdef{W} \bdef{X} \bdef{Y} \bdef{I} \caldef{N}
 \fi
 \ifshorthand@ling
 	\renewcommand{\iff}{\leftrightarrow}
